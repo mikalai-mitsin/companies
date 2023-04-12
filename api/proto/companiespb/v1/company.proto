@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package companiespb.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+option go_package = "github.com/018bf/companies/pkg/companiespb/v1";
+
+enum CompanyType {
+  COMPANY_TYPE_UNKNOWN = 0;
+  COMPANY_TYPE_CORPORATIONS = 1;
+  COMPANY_TYPE_NON_PROFIT = 2;
+  COMPANY_TYPE_COOPERATIVE = 3;
+  COMPANY_TYPE_SOLE_PROPRIETORSHIP = 4;
+}
+
+message CompanyCreate {
+  string name = 1;
+  string description = 2;
+  int32 amount_of_employees = 3;
+  bool registered = 4;
+  CompanyType type = 5;
+}
+
+message CompanyGet {
+  string id = 1;
+}
+
+message CompanyUpdate {
+  string id = 1;
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue description = 3;
+  google.protobuf.Int32Value amount_of_employees = 4;
+  google.protobuf.BoolValue registered = 5;
+  CompanyType type = 6;
+}
+
+message Company {
+  string id = 1;
+  google.protobuf.Timestamp updated_at = 2;
+  google.protobuf.Timestamp created_at = 3;
+  string name = 4;
+  string description = 5;
+  int32 amount_of_employees = 6;
+  bool registered = 7;
+  CompanyType type = 8;
+}
+
+message ListCompany {
+  repeated Company items = 1;
+  uint64 count = 2;
+}
+
+message CompanyDelete {
+  string id = 1;
+}
+
+message CompanyFilter {
+  google.protobuf.UInt64Value page_number = 1;
+  google.protobuf.UInt64Value page_size = 2;
+  google.protobuf.StringValue search = 3;
+  google.protobuf.BoolValue registered = 4;
+  repeated string order_by = 5;
+  repeated string ids = 6;
+  repeated CompanyType types = 7;
+}
+
+service CompanyService {
+  rpc Create(companiespb.v1.CompanyCreate) returns (companiespb.v1.Company) {
+    option (google.api.http) = {
+      post: "/api/v1/companies"
+      body: "*"
+    };
+  }
+  rpc Get(companiespb.v1.CompanyGet) returns (companiespb.v1.Company) {
+    option (google.api.http) = {get: "/api/v1/companies/{id}"};
+  }
+  rpc Update(companiespb.v1.CompanyUpdate) returns (companiespb.v1.Company) {
+    option (google.api.http) = {
+      patch: "/api/v1/companies/{id}"
+      body: "*"
+    };
+  }
+  rpc Delete(companiespb.v1.CompanyDelete) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/api/v1/companies/{id}"};
+  }
+  rpc List(companiespb.v1.CompanyFilter) returns (companiespb.v1.ListCompany) {
+    option (google.api.http) = {get: "/api/v1/companies"};
+  }
+}

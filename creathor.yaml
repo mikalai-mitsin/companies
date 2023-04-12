@@ -1,0 +1,22 @@
+name: "companies"
+module: "github.com/018bf/companies"
+goVersion: "1.20"
+ci: "github"
+gRPC: true
+REST: true
+auth: true
+models:
+  - model: "Company"
+    params:
+      - name: "Name"
+        type: "string"
+        search: true
+      - name: "Description"
+        type: "string"
+        search: true
+      - name: "AmountOfEmployees"
+        type: "int"
+      - name: "Registered"
+        type: "int"
+      - name: "Type"
+        type: "string"

@@ -1,0 +1,35 @@
+services:
+  companies:
+    depends_on:
+      - postgres
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+    command: rest
+    environment:
+      - COMPANIES_CONFIG_PATH=/app/config/config.toml
+    volumes:
+      - ./config.toml:/app/config/config.toml
+    ports:
+      - "8000:8000"
+  companies-migrate:
+    depends_on:
+      - postgres
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+    command: migrate
+    environment:
+      - COMPANIES_CONFIG_PATH=/app/config/config.toml
+    volumes:
+      - ./config.toml:/app/config/config.toml
+  postgres:
+    image: postgres:latest
+    restart: always
+    env_file:
+      - postgres.env
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  postgres: { }
