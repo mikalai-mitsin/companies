@@ -21,5 +21,4 @@ jobs:
           context: .
           file: build/Dockerfile
           push: true
-          tags:
-            - ${{ secrets.DOCKERHUB_USERNAME }}/companies:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/companies:${{ github.sha }}
