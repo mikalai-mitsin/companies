@@ -1,7 +1,9 @@
 package log
 
 import (
+	"context"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -30,6 +32,21 @@ func Any(key string, value interface{}) Field {
 
 func Int64(key string, value int64) Field {
 	return Field(zap.Int64(key, value))
+}
+
+func Duration(key string, value time.Duration) Field {
+	return Field(zap.Duration(key, value))
+}
+func Time(key string, value time.Time) Field {
+	return Field(zap.Time(key, value))
+}
+
+func Int(key string, value int) Field {
+	return Field(zap.Int(key, value))
+}
+
+func Context(ctx context.Context) Field {
+	return Field(zap.Any("request_id", ctx.Value(RequestIDKey)))
 }
 func Uint64(key string, value uint64) Field {
 	return Field(zap.Uint64(key, value))

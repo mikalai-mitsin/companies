@@ -4,20 +4,19 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/018bf/companies/internal/configs"
 	"github.com/018bf/companies/internal/domain/errs"
-	"github.com/gin-contrib/cors"
-
 	"github.com/018bf/companies/pkg/log"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 type ctxKey string
 
 const (
-	TokenContextKey     ctxKey = "token"
-	RequestIDContextKey ctxKey = "request_id"
+	TokenContextKey ctxKey = "token"
 )
 
 type Server struct {
@@ -45,10 +44,12 @@ func NewServer(
 	authMiddleware *AuthMiddleware,
 	companyHandler *CompanyHandler,
 ) *Server {
-	router := gin.Default()
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
 	router.Use(authMiddleware.Middleware())
 	router.Use(cors.Default())
 	router.Use(RequestMiddleware)
+	router.Use(Logger(logger))
 	router.GET("/", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})
@@ -118,4 +119,35 @@ func decodeError(ctx *gin.Context, err error) {
 		return
 	}
 	ctx.String(http.StatusInternalServerError, err.Error())
+}
+
+func Logger(logger log.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+		query := c.Request.URL.RawQuery
+		c.Next()
+
+		end := time.Now().UTC()
+		latency := end.Sub(start)
+		fields := []log.Field{
+			log.Int("status", c.Writer.Status()),
+			log.String("method", c.Request.Method),
+			log.String("path", path),
+			log.String("query", query),
+			log.String("ip", c.ClientIP()),
+			log.String("user-agent", c.Request.UserAgent()),
+			log.Duration("latency", latency),
+			log.String("time", end.String()),
+			log.Context(c.Request.Context()),
+		}
+		if len(c.Errors) > 0 {
+			// Append error field if this is an erroneous request.
+			for _, e := range c.Errors.Errors() {
+				logger.Error(e, fields...)
+			}
+		} else {
+			logger.Info(path, fields...)
+		}
+	}
 }

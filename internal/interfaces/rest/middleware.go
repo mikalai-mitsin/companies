@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/018bf/companies/internal/domain/interceptors"
 	"github.com/018bf/companies/internal/domain/models"
+	"github.com/018bf/companies/pkg/log"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -36,7 +37,7 @@ func (m *AuthMiddleware) Middleware() gin.HandlerFunc {
 }
 
 func RequestMiddleware(c *gin.Context) {
-	ctx := context.WithValue(c.Request.Context(), RequestIDContextKey, uuid.New().String())
+	ctx := context.WithValue(c.Request.Context(), log.RequestIDKey, uuid.New().String())
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()
 }
