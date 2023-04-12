@@ -10,6 +10,8 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.20
+      - name: Install dependencies
+        run: go mod download
       - name: Test
         run: go test -v ./...
 
@@ -21,4 +23,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.20
+      - name: Install dependencies
+        run: go mod download
       - uses: golangci/golangci-lint-action@v3
