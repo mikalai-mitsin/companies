@@ -41,7 +41,7 @@ tasks:
   release:
     deps:
       - task: lint
-      - task: test
+      - task: unit
     cmds:
       - git flow release start {{ .tag }}
       - task: log
