@@ -93,3 +93,8 @@ database:
   name: "companies"
 
 logLevel: "warn"
+
+kafka:
+  host: "kafka"
+  port: "9092"
+  topic: "companies"

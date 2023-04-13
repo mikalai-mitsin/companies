@@ -50,6 +50,14 @@ type Error struct {
 	Params  Params    `json:"params"`
 }
 
+func (e Error) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("message", e.Message)
+	encoder.AddUint("code", uint(e.Code))
+	if err := encoder.AddObject("params", e.Params); err != nil {
+		return err
+	}
+	return nil
+}
 func (e *Error) WithParam(key, value string) *Error {
 	e.AddParam(key, value)
 	return e

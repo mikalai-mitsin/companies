@@ -12,17 +12,20 @@ import (
 type CompanyInterceptor struct {
 	companyUseCase usecases.CompanyUseCase
 	authUseCase    usecases.AuthUseCase
+	eventUseCase   usecases.EventUseCase
 	logger         log.Logger
 }
 
 func NewCompanyInterceptor(
 	companyUseCase usecases.CompanyUseCase,
 	authUseCase usecases.AuthUseCase,
+	eventUseCase usecases.EventUseCase,
 	logger log.Logger,
 ) interceptors.CompanyInterceptor {
 	return &CompanyInterceptor{
 		companyUseCase: companyUseCase,
 		authUseCase:    authUseCase,
+		eventUseCase:   eventUseCase,
 		logger:         logger,
 	}
 }
@@ -41,6 +44,9 @@ func (i *CompanyInterceptor) Create(
 	company, err := i.companyUseCase.Create(ctx, create)
 	if err != nil {
 		return nil, err
+	}
+	if err := i.eventUseCase.CompanyCreated(ctx, company); err != nil {
+		i.logger.Error("can't send 'company created' event", log.Context(ctx), log.Error(err))
 	}
 	return company, nil
 }
@@ -102,6 +108,9 @@ func (i *CompanyInterceptor) Update(
 	if err != nil {
 		return nil, err
 	}
+	if err := i.eventUseCase.CompanyUpdated(ctx, company); err != nil {
+		i.logger.Error("can't send 'company updated' event", log.Context(ctx), log.Error(err))
+	}
 	return updated, nil
 }
 
@@ -122,6 +131,9 @@ func (i *CompanyInterceptor) Delete(
 	}
 	if err := i.companyUseCase.Delete(ctx, id); err != nil {
 		return err
+	}
+	if err := i.eventUseCase.CompanyDeleted(ctx, company); err != nil {
+		i.logger.Error("can't send 'company deleted' event", log.Context(ctx), log.Error(err))
 	}
 	return nil
 }

@@ -24,12 +24,14 @@ func TestNewCompanyInterceptor(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	authUseCase := mock_usecases.NewMockAuthUseCase(ctrl)
+	eventUseCase := mock_usecases.NewMockEventUseCase(ctrl)
 	companyUseCase := mock_usecases.NewMockCompanyUseCase(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	type args struct {
 		authUseCase    usecases.AuthUseCase
 		companyUseCase usecases.CompanyUseCase
 		logger         log.Logger
+		eventUseCase   usecases.EventUseCase
 	}
 	tests := []struct {
 		name  string
@@ -44,10 +46,12 @@ func TestNewCompanyInterceptor(t *testing.T) {
 				companyUseCase: companyUseCase,
 				authUseCase:    authUseCase,
 				logger:         logger,
+				eventUseCase:   eventUseCase,
 			},
 			want: &CompanyInterceptor{
 				companyUseCase: companyUseCase,
 				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 		},
@@ -55,7 +59,7 @@ func TestNewCompanyInterceptor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setup()
-			if got := NewCompanyInterceptor(tt.args.companyUseCase, tt.args.authUseCase, tt.args.logger); !reflect.DeepEqual(
+			if got := NewCompanyInterceptor(tt.args.companyUseCase, tt.args.authUseCase, tt.args.eventUseCase, tt.args.logger); !reflect.DeepEqual(
 				got,
 				tt.want,
 			) {
@@ -218,9 +222,11 @@ func TestCompanyInterceptor_Create(t *testing.T) {
 	ctx := context.Background()
 	company := mock_models.NewCompany(t)
 	create := mock_models.NewCompanyCreate(t)
+	eventUseCase := mock_usecases.NewMockEventUseCase(ctrl)
 	type fields struct {
 		companyUseCase usecases.CompanyUseCase
 		authUseCase    usecases.AuthUseCase
+		eventUseCase   usecases.EventUseCase
 		logger         log.Logger
 	}
 	type args struct {
@@ -246,10 +252,46 @@ func TestCompanyInterceptor_Create(t *testing.T) {
 					HasObjectPermission(ctx, token, models.PermissionIDCompanyCreate, create).
 					Return(nil)
 				companyUseCase.EXPECT().Create(ctx, create).Return(company, nil)
+				eventUseCase.EXPECT().CompanyCreated(ctx, company).Return(nil)
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
+				logger:         logger,
+			},
+			args: args{
+				ctx:    ctx,
+				create: create,
+				token:  token,
+			},
+			want:    company,
+			wantErr: nil,
+		},
+		{
+			name: "send event error",
+			setup: func() {
+				authUseCase.EXPECT().
+					HasPermission(ctx, token, models.PermissionIDCompanyCreate).
+					Return(nil)
+				authUseCase.EXPECT().
+					HasObjectPermission(ctx, token, models.PermissionIDCompanyCreate, create).
+					Return(nil)
+				companyUseCase.EXPECT().Create(ctx, create).Return(company, nil)
+				eventUseCase.EXPECT().
+					CompanyCreated(ctx, company).
+					Return(errs.NewUnexpectedBehaviorError("err 235"))
+				logger.EXPECT().
+					Error(
+						"can't send 'company created' event",
+						log.Context(ctx),
+						log.Error(errs.NewUnexpectedBehaviorError("err 235")),
+					)
+			},
+			fields: fields{
+				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -271,8 +313,9 @@ func TestCompanyInterceptor_Create(t *testing.T) {
 					Return(errs.NewPermissionDenied())
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -291,8 +334,9 @@ func TestCompanyInterceptor_Create(t *testing.T) {
 					Return(errs.NewPermissionDenied())
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -317,8 +361,9 @@ func TestCompanyInterceptor_Create(t *testing.T) {
 					Return(nil, errs.NewUnexpectedBehaviorError("c u"))
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -336,6 +381,7 @@ func TestCompanyInterceptor_Create(t *testing.T) {
 			i := &CompanyInterceptor{
 				companyUseCase: tt.fields.companyUseCase,
 				authUseCase:    tt.fields.authUseCase,
+				eventUseCase:   tt.fields.eventUseCase,
 				logger:         tt.fields.logger,
 			}
 			got, err := i.Create(tt.args.ctx, tt.args.create, tt.args.token)
@@ -360,9 +406,11 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 	ctx := context.Background()
 	company := mock_models.NewCompany(t)
 	update := mock_models.NewCompanyUpdate(t)
+	eventUseCase := mock_usecases.NewMockEventUseCase(ctrl)
 	type fields struct {
 		companyUseCase usecases.CompanyUseCase
 		authUseCase    usecases.AuthUseCase
+		eventUseCase   usecases.EventUseCase
 		logger         log.Logger
 	}
 	type args struct {
@@ -391,10 +439,51 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 					HasObjectPermission(ctx, token, models.PermissionIDCompanyUpdate, company).
 					Return(nil)
 				companyUseCase.EXPECT().Update(ctx, update).Return(company, nil)
+				eventUseCase.EXPECT().CompanyUpdated(ctx, company).Return(nil)
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
+				logger:         logger,
+			},
+			args: args{
+				ctx:    ctx,
+				update: update,
+				token:  token,
+			},
+			want:    company,
+			wantErr: nil,
+		},
+		{
+			name: "send event error",
+			setup: func() {
+				authUseCase.EXPECT().
+					HasPermission(ctx, token, models.PermissionIDCompanyUpdate).
+					Return(nil)
+				companyUseCase.EXPECT().
+					Get(ctx, update.ID).
+					Return(company, nil)
+				authUseCase.EXPECT().
+					HasObjectPermission(ctx, token, models.PermissionIDCompanyUpdate, company).
+					Return(nil)
+				companyUseCase.EXPECT().
+					Update(ctx, update).
+					Return(company, nil)
+				eventUseCase.EXPECT().
+					CompanyUpdated(ctx, company).
+					Return(errs.NewUnexpectedBehaviorError("err 235"))
+				logger.EXPECT().
+					Error(
+						"can't send 'company updated' event",
+						log.Context(ctx),
+						log.Error(errs.NewUnexpectedBehaviorError("err 235")),
+					)
+			},
+			fields: fields{
+				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -419,8 +508,9 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 					Return(errs.NewPermissionDenied())
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -442,8 +532,9 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 					Return(nil, errs.NewEntityNotFound())
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -471,8 +562,9 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 					Return(nil, errs.NewUnexpectedBehaviorError("d 2"))
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -491,8 +583,9 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 					Return(errs.NewPermissionDenied())
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				eventUseCase:   eventUseCase,
 				logger:         logger,
 			},
 			args: args{
@@ -509,6 +602,7 @@ func TestCompanyInterceptor_Update(t *testing.T) {
 			i := &CompanyInterceptor{
 				companyUseCase: tt.fields.companyUseCase,
 				authUseCase:    tt.fields.authUseCase,
+				eventUseCase:   tt.fields.eventUseCase,
 				logger:         tt.fields.logger,
 			}
 			got, err := i.Update(tt.args.ctx, tt.args.update, tt.args.token)
@@ -532,10 +626,12 @@ func TestCompanyInterceptor_Delete(t *testing.T) {
 	logger := mock_log.NewMockLogger(ctrl)
 	ctx := context.Background()
 	company := mock_models.NewCompany(t)
+	eventUseCase := mock_usecases.NewMockEventUseCase(ctrl)
 	type fields struct {
 		companyUseCase usecases.CompanyUseCase
 		authUseCase    usecases.AuthUseCase
 		logger         log.Logger
+		eventUseCase   usecases.EventUseCase
 	}
 	type args struct {
 		ctx   context.Context
@@ -564,11 +660,48 @@ func TestCompanyInterceptor_Delete(t *testing.T) {
 				companyUseCase.EXPECT().
 					Delete(ctx, company.ID).
 					Return(nil)
+				eventUseCase.EXPECT().
+					CompanyDeleted(ctx, company).
+					Return(nil)
 			},
 			fields: fields{
-				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
 				logger:         logger,
+				eventUseCase:   eventUseCase,
+			},
+			args: args{
+				ctx:   ctx,
+				id:    company.ID,
+				token: token,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "send event error",
+			setup: func() {
+				authUseCase.EXPECT().
+					HasPermission(ctx, token, models.PermissionIDCompanyDelete).
+					Return(nil)
+				companyUseCase.EXPECT().
+					Get(ctx, company.ID).
+					Return(company, nil)
+				authUseCase.EXPECT().
+					HasObjectPermission(ctx, token, models.PermissionIDCompanyDelete, company).
+					Return(nil)
+				companyUseCase.EXPECT().
+					Delete(ctx, company.ID).
+					Return(nil)
+				eventUseCase.EXPECT().
+					CompanyDeleted(ctx, company).
+					Return(errs.NewUnexpectedBehaviorError("err 235"))
+				logger.EXPECT().Error("can't send 'company deleted' event", log.Context(ctx), log.Error(errs.NewUnexpectedBehaviorError("err 235")))
+			},
+			fields: fields{
+				companyUseCase: companyUseCase,
+				authUseCase:    authUseCase,
+				logger:         logger,
+				eventUseCase:   eventUseCase,
 			},
 			args: args{
 				ctx:   ctx,
@@ -616,6 +749,7 @@ func TestCompanyInterceptor_Delete(t *testing.T) {
 				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
 				logger:         logger,
+				eventUseCase:   eventUseCase,
 			},
 			args: args{
 				ctx:   ctx,
@@ -644,6 +778,7 @@ func TestCompanyInterceptor_Delete(t *testing.T) {
 				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
 				logger:         logger,
+				eventUseCase:   eventUseCase,
 			},
 			args: args{
 				ctx:   ctx,
@@ -663,6 +798,7 @@ func TestCompanyInterceptor_Delete(t *testing.T) {
 				authUseCase:    authUseCase,
 				companyUseCase: companyUseCase,
 				logger:         logger,
+				eventUseCase:   eventUseCase,
 			},
 			args: args{
 				ctx:   ctx,
@@ -679,6 +815,7 @@ func TestCompanyInterceptor_Delete(t *testing.T) {
 				companyUseCase: tt.fields.companyUseCase,
 				authUseCase:    tt.fields.authUseCase,
 				logger:         tt.fields.logger,
+				eventUseCase:   tt.fields.eventUseCase,
 			}
 			if err := i.Delete(tt.args.ctx, tt.args.id, tt.args.token); !errors.Is(
 				err,
