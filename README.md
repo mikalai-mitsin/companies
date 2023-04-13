@@ -28,6 +28,11 @@
 3. Fill `configs/test.toml`
 4. Run `task test`
 
+## To improve
+- JWT permissions checking сan be simplified if we don't plan to check permissions in the token
+- Remove deprecated list method (left for example)
+- Add DTOs to REST module
+
 ## Directories
 
 ### `/cmd`
