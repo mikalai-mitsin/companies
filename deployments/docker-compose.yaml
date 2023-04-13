@@ -1,11 +1,15 @@
 # NOT FOR PRODUCTION!
-version: '2'
+version: '3'
 
 services:
   companies:
     depends_on:
-      - postgres
-      - kafka
+      companies-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     build:
       context: ../
       dockerfile: build/Dockerfile
@@ -18,7 +22,10 @@ services:
       - "8000:8000"
   companies-migrate:
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     build:
       context: ../
       dockerfile: build/Dockerfile
@@ -39,6 +46,11 @@ services:
     ports:
       - "2181:2181"
   kafka:
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--list", "--zookeeper", "zookeeper:2181" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
     depends_on:
       - zookeeper
     image: wurstmeister/kafka
