@@ -107,6 +107,24 @@ func TestCompanyUseCase_Get(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name:  "invalid id",
+			setup: func() {},
+			fields: fields{
+				companyRepository: companyRepository,
+				logger:            logger,
+			},
+			args: args{
+				ctx: ctx,
+				id:  "company.ID",
+			},
+			want: nil,
+			wantErr: &errs.Error{
+				Code:    3,
+				Message: "must be a valid UUID",
+				Params:  map[string]string{},
+			},
+		},
+		{
 			name: "Company not found",
 			setup: func() {
 				companyRepository.EXPECT().
@@ -190,6 +208,23 @@ func TestCompanyUseCase_List(t *testing.T) {
 			want:    listCompanies,
 			want1:   count,
 			wantErr: nil,
+		},
+		{
+			name:  "invalid",
+			setup: func() {},
+			fields: fields{
+				companyRepository: companyRepository,
+				logger:            logger,
+			},
+			args: args{
+				ctx: ctx,
+				filter: &models.CompanyFilter{
+					IDs: []models.UUID{"asd"},
+				},
+			},
+			want:    nil,
+			want1:   0,
+			wantErr: errs.NewInvalidFormError().WithParam("ids", `0: {"code":3,"message":"must be a valid UUID","params":{}}.`),
 		},
 		{
 			name: "list error",
