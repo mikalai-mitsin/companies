@@ -2,6 +2,8 @@ package log
 
 import (
 	"context"
+	"errors"
+	"github.com/018bf/companies/internal/domain/errs"
 	"strings"
 	"time"
 
@@ -50,6 +52,14 @@ func Context(ctx context.Context) Field {
 }
 func Uint64(key string, value uint64) Field {
 	return Field(zap.Uint64(key, value))
+}
+
+func Error(err error) Field {
+	var domainError *errs.Error
+	if errors.As(err, &domainError) {
+		return Field(zap.Object("error", domainError))
+	}
+	return Field(zap.Error(err))
 }
 
 type Logger interface {

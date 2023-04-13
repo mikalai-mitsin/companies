@@ -7,3 +7,6 @@ metadata:
 data:
   LOG_LEVEL: {{ .Values.logLevel | quote }}
   DATABASE_NAME: {{ .Values.database.name | quote  }}
+  KAFKA_HOST: {{ .Values.kafka.host | quote  }}
+  KAFKA_PORT: {{ .Values.kafka.port | quote  }}
+  KAFKA_TOPIC: {{ .Values.kafka.topic | quote  }}

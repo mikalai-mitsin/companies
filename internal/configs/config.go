@@ -18,11 +18,18 @@ type database struct {
 	MaxIDLEConnections int    `env:"DATABASE_MAX_IDLE_CONNECTIONS" toml:"max_idle_connections" env-default:"10"`
 }
 
+type kafka struct {
+	Host  string `env:"KAFKA_HOST" toml:"host"`
+	Port  int    `env:"KAFKA_PORT" toml:"port" `
+	Topic string `env:"KAFKA_TOPIC" toml:"topic" `
+}
+
 type Config struct {
 	BindAddr string   `env:"BIND_ADDR" toml:"bind_addr" env-default:":8000"`
 	LogLevel string   `env:"LOG_LEVEL" toml:"log_level" env-default:"debug"`
 	Database database `                toml:"database"`
 	Auth     auth     `                toml:"auth"`
+	Kafka    kafka    `                toml:"kafka"`
 }
 
 func ParseConfig(configPath string) (*Config, error) {

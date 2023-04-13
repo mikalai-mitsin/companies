@@ -2,17 +2,19 @@ package containers
 
 import (
 	"context"
-
 	"github.com/018bf/companies/internal/configs"
 	"github.com/018bf/companies/internal/interceptors"
 	grpcInterface "github.com/018bf/companies/internal/interfaces/grpc"
+	kafkaInterface "github.com/018bf/companies/internal/interfaces/kafka"
 	postgresInterface "github.com/018bf/companies/internal/interfaces/postgres"
 	restInterface "github.com/018bf/companies/internal/interfaces/rest"
 	jwtRepositories "github.com/018bf/companies/internal/repositories/jwt"
+	kafkaRepositories "github.com/018bf/companies/internal/repositories/kafka"
 	postgresRepositories "github.com/018bf/companies/internal/repositories/postgres"
 	"github.com/018bf/companies/internal/usecases"
 	"github.com/018bf/companies/pkg/clock"
 	"github.com/018bf/companies/pkg/log"
+	"github.com/Shopify/sarama"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 )
@@ -30,6 +32,7 @@ var FXModule = fx.Options(
 		clock.NewRealClock,
 		postgresInterface.NewDatabase,
 		postgresInterface.NewMigrateManager,
+		kafkaInterface.NewProducer,
 		grpcInterface.NewServer,
 		grpcInterface.NewRequestIDMiddleware,
 		grpcInterface.NewAuthMiddleware,
@@ -43,7 +46,21 @@ var FXModule = fx.Options(
 		interceptors.NewCompanyInterceptor,
 		usecases.NewCompanyUseCase,
 		postgresRepositories.NewCompanyRepository,
+		usecases.NewEventUseCase,
+		kafkaRepositories.NewEventRepository,
 	),
+	fx.Invoke(func(
+		lifecycle fx.Lifecycle,
+		logger log.Logger,
+		producer sarama.SyncProducer,
+		shutdowner fx.Shutdowner,
+	) {
+		lifecycle.Append(fx.Hook{
+			OnStop: func(_ context.Context) error {
+				return producer.Close()
+			},
+		})
+	}),
 )
 
 func NewMigrateContainer(config string) *fx.App {

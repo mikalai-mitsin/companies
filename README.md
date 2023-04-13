@@ -24,8 +24,9 @@
 
 ## Integration Testing
 1. Create tests database
-2. Fill `configs/config.toml`
-3. Run `task test`
+2. Create kafka topic
+3. Fill `configs/config.toml`
+4. Run `task test`
 
 ## Directories
 
