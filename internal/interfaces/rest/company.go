@@ -59,6 +59,7 @@ func (h *CompanyHandler) Create(ctx *gin.Context) {
 }
 
 // List          godoc
+// @Deprecated
 // @Summary      List Company array
 // @Description  Responds with the list of all Company as JSON.
 // @Tags         Company
@@ -73,6 +74,8 @@ func (h *CompanyHandler) Create(ctx *gin.Context) {
 // @Failure      500   {object}  errs.Error
 // @Failure      503   {object}  errs.Error
 // @Router       /companies [get]
+//
+// deprecated
 func (h *CompanyHandler) List(ctx *gin.Context) {
 	token := ctx.Request.Context().Value(TokenContextKey).(*models.Token)
 	filter := &models.CompanyFilter{}

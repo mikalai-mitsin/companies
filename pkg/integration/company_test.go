@@ -396,7 +396,7 @@ func TestRegionList(t *testing.T) {
 					},
 				},
 			},
-			wantErr: nil,
+			wantErr: status.New(codes.PermissionDenied, "Permission denied."),
 		},
 		{
 			name: "invalid argument",
@@ -411,12 +411,12 @@ func TestRegionList(t *testing.T) {
 					Search:     wrapperspb.String("search"),
 				},
 			},
-			wantErr: status.New(codes.InvalidArgument, "The form sent is not valid, please correct the errors below."),
+			wantErr: status.New(codes.PermissionDenied, "Permission denied."),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.fields.client.List(tt.args.ctx, tt.args.input)
+			got, err := tt.fields.client.List(tt.args.ctx, tt.args.input) // nolint: staticcheck
 			s, _ := status.FromError(err)
 			if !statusEqual(s, tt.wantErr) {
 				t.Errorf("List() err = %v, wantErr %v", err, tt.wantErr)

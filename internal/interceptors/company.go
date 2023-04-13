@@ -63,6 +63,8 @@ func (i *CompanyInterceptor) Get(
 	return company, nil
 }
 
+// List
+// deprecated
 func (i *CompanyInterceptor) List(
 	ctx context.Context,
 	filter *models.CompanyFilter,

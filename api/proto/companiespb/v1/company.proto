@@ -73,5 +73,7 @@ service CompanyService {
   rpc Get(companiespb.v1.CompanyGet) returns (companiespb.v1.Company) {}
   rpc Update(companiespb.v1.CompanyUpdate) returns (companiespb.v1.Company) {}
   rpc Delete(companiespb.v1.CompanyDelete) returns (google.protobuf.Empty) {}
-  rpc List(companiespb.v1.CompanyFilter) returns (companiespb.v1.ListCompany) {}
+  rpc List(companiespb.v1.CompanyFilter) returns (companiespb.v1.ListCompany) {
+    option deprecated = true;
+  }
 }

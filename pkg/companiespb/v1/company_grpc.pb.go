@@ -27,6 +27,7 @@ type CompanyServiceClient interface {
 	Get(ctx context.Context, in *CompanyGet, opts ...grpc.CallOption) (*Company, error)
 	Update(ctx context.Context, in *CompanyUpdate, opts ...grpc.CallOption) (*Company, error)
 	Delete(ctx context.Context, in *CompanyDelete, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Deprecated: Do not use.
 	List(ctx context.Context, in *CompanyFilter, opts ...grpc.CallOption) (*ListCompany, error)
 }
 
@@ -74,6 +75,7 @@ func (c *companyServiceClient) Delete(ctx context.Context, in *CompanyDelete, op
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *companyServiceClient) List(ctx context.Context, in *CompanyFilter, opts ...grpc.CallOption) (*ListCompany, error) {
 	out := new(ListCompany)
 	err := c.cc.Invoke(ctx, "/companiespb.v1.CompanyService/List", in, out, opts...)
@@ -91,6 +93,7 @@ type CompanyServiceServer interface {
 	Get(context.Context, *CompanyGet) (*Company, error)
 	Update(context.Context, *CompanyUpdate) (*Company, error)
 	Delete(context.Context, *CompanyDelete) (*emptypb.Empty, error)
+	// Deprecated: Do not use.
 	List(context.Context, *CompanyFilter) (*ListCompany, error)
 }
 

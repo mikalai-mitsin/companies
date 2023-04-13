@@ -89,7 +89,7 @@ type objectPermissionChecker func(model any, token *jwt.Token) error
 type permissionChecker func(token *jwt.Token) error
 
 var hasObjectPermission = map[models.PermissionID][]objectPermissionChecker{
-	models.PermissionIDCompanyList:   {objectAnybody},
+	models.PermissionIDCompanyList:   {objectNobody},
 	models.PermissionIDCompanyDetail: {objectAnybody},
 	models.PermissionIDCompanyCreate: {objectUser},
 	models.PermissionIDCompanyUpdate: {objectUser},
@@ -97,7 +97,7 @@ var hasObjectPermission = map[models.PermissionID][]objectPermissionChecker{
 }
 
 var hasPermission = map[models.PermissionID][]permissionChecker{
-	models.PermissionIDCompanyList:   {anybody},
+	models.PermissionIDCompanyList:   {nobody},
 	models.PermissionIDCompanyDetail: {anybody},
 	models.PermissionIDCompanyCreate: {user},
 	models.PermissionIDCompanyUpdate: {user},
