@@ -16,7 +16,7 @@ func NewCompany(t *testing.T) *models.Company {
 		ID:                models.UUID(uuid.NewString()),
 		UpdatedAt:         faker.New().Time().Time(time.Now()),
 		CreatedAt:         faker.New().Time().Time(time.Now()),
-		Name:              faker.New().Lorem().Text(15),
+		Name:              faker.New().Address().PostCode(),
 		Description:       faker.New().Lorem().Sentence(15),
 		AmountOfEmployees: faker.New().Int(),
 		Registered:        faker.New().Bool(),
@@ -26,7 +26,7 @@ func NewCompany(t *testing.T) *models.Company {
 func NewCompanyCreate(t *testing.T) *models.CompanyCreate {
 	t.Helper()
 	return &models.CompanyCreate{
-		Name:              faker.New().Lorem().Text(15),
+		Name:              faker.New().Lorem().Word(),
 		Description:       faker.New().Lorem().Sentence(15),
 		AmountOfEmployees: faker.New().Int(),
 		Registered:        faker.New().Bool(),

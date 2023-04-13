@@ -10,11 +10,22 @@ tasks:
         sh: git describe --tags --abbrev=0
 
   test:
+    vars:
+      mode: '{{ default "" .mode }}'
+      count: '{{ default "1" .count }}'
+    env:
+      COMPANIES_CONFIG_PATH: "{{.USER_WORKING_DIR}}/configs/test.toml"
     cmds:
-      - go test -cover ./... -coverprofile ./coverage.out -coverpkg ./...
+      - go test {{ .mode }} -test.count {{ .count }} -cover ./... -coverprofile ./coverage.out -coverpkg ./...
       - defer: rm ./coverage.out
       - go tool cover -func ./coverage.out
 
+  unit:
+    cmds:
+      - task: test
+        vars:
+          mode: "-short"
+          count: "50"
   lint:
     cmds:
       - golangci-lint run ./... --timeout 5m0s

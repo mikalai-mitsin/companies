@@ -69,25 +69,9 @@ message CompanyFilter {
 }
 
 service CompanyService {
-  rpc Create(companiespb.v1.CompanyCreate) returns (companiespb.v1.Company) {
-    option (google.api.http) = {
-      post: "/api/v1/companies"
-      body: "*"
-    };
-  }
-  rpc Get(companiespb.v1.CompanyGet) returns (companiespb.v1.Company) {
-    option (google.api.http) = {get: "/api/v1/companies/{id}"};
-  }
-  rpc Update(companiespb.v1.CompanyUpdate) returns (companiespb.v1.Company) {
-    option (google.api.http) = {
-      patch: "/api/v1/companies/{id}"
-      body: "*"
-    };
-  }
-  rpc Delete(companiespb.v1.CompanyDelete) returns (google.protobuf.Empty) {
-    option (google.api.http) = {delete: "/api/v1/companies/{id}"};
-  }
-  rpc List(companiespb.v1.CompanyFilter) returns (companiespb.v1.ListCompany) {
-    option (google.api.http) = {get: "/api/v1/companies"};
-  }
+  rpc Create(companiespb.v1.CompanyCreate) returns (companiespb.v1.Company) {}
+  rpc Get(companiespb.v1.CompanyGet) returns (companiespb.v1.Company) {}
+  rpc Update(companiespb.v1.CompanyUpdate) returns (companiespb.v1.Company) {}
+  rpc Delete(companiespb.v1.CompanyDelete) returns (google.protobuf.Empty) {}
+  rpc List(companiespb.v1.CompanyFilter) returns (companiespb.v1.ListCompany) {}
 }

@@ -19,6 +19,14 @@
 - `--config FILE`, `-c FILE`  Load configuration from FILE [$COMPANIES_CONFIG_PATH]
 - `--help`, `-h`              show help
 
+## Unit Testing
+1. Run `task unit`
+
+## Integration Testing
+1. Create tests database
+2. Fill `configs/config.toml`
+3. Run `task test`
+
 ## Directories
 
 ### `/cmd`
