@@ -60,14 +60,11 @@ func NewMigrateContainer(config string) *fx.App {
 		) {
 			lifecycle.Append(fx.Hook{
 				OnStart: func(ctx context.Context) error {
-					go func() {
-						err := manager.Up(ctx)
-						if err != nil {
-							logger.Error("shutdown", log.Any("error", err))
-							_ = shutdowner.Shutdown()
-						}
-					}()
-					return nil
+					err := manager.Up(ctx)
+					if err != nil {
+						logger.Error("shutdown", log.Any("error", err))
+					}
+					return shutdowner.Shutdown(fx.ExitCode(0))
 				},
 				OnStop: nil,
 			})

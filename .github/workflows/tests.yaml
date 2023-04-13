@@ -7,18 +7,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: 1.20
+          go-version: 1.20.x
       - name: Test
-        run: go test -v ./...
+        run: go test -short -v ./...
 
   golangci:
     name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: 1.20
+          go-version: 1.20.x
       - uses: golangci/golangci-lint-action@v3

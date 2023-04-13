@@ -58,6 +58,8 @@ func (u *CompanyUseCase) Get(ctx context.Context, id models.UUID) (*models.Compa
 	return company, nil
 }
 
+// List
+// deprecated
 func (u *CompanyUseCase) List(
 	ctx context.Context,
 	filter *models.CompanyFilter,

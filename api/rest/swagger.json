@@ -23,6 +23,7 @@
                     "Company"
                 ],
                 "summary": "List Company array",
+                "deprecated": true,
                 "parameters": [
                     {
                         "type": "array",

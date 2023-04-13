@@ -15,7 +15,7 @@ type CompanyInterceptor interface {
 		ctx context.Context,
 		filter *models.CompanyFilter,
 		token *models.Token,
-	) ([]*models.Company, uint64, error)
+	) ([]*models.Company, uint64, error) // deprecated
 	Update(
 		ctx context.Context,
 		update *models.CompanyUpdate,

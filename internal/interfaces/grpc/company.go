@@ -56,6 +56,8 @@ func (s *CompanyServiceServer) Get(
 	return decodeCompany(company), nil
 }
 
+// List
+// deprecated
 func (s *CompanyServiceServer) List(
 	ctx context.Context,
 	filter *companiespb.CompanyFilter,
