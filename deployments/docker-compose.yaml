@@ -1,3 +1,4 @@
+# NOT FOR PRODUCTION!
 version: '2'
 
 services:
@@ -33,13 +34,6 @@ services:
       - postgres.env
     volumes:
       - postgres:/var/lib/postgresql/data
-  kouncil:
-    image: consdata/kouncil:latest
-    environment:
-      'bootstrapServers': "kafka:9092"
-      'kouncil.auth.active-provider': "inmemory"
-    ports:
-      - "8080:8080"
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
@@ -49,12 +43,8 @@ services:
     ports:
       - "9092:9092"
       - "9094:9094"
-    environment:
-      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,OUTSIDE://127.0.0.1:9094
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "companies:1:1"
+    env_file:
+      - kafka.env
+
 volumes:
   postgres: { }
