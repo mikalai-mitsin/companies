@@ -156,6 +156,9 @@ func FromPostgresError(err error) *Error {
 		e.AddParam("details", pqErr.Detail)
 		e.AddParam("message", pqErr.Message)
 		e.AddParam("postgres_code", fmt.Sprint(pqErr.Code))
+		if pqErr.Code == "23505" {
+			e = NewInvalidFormError().WithParam(pqErr.Constraint, pqErr.Detail)
+		}
 	}
 	if errors.Is(err, sql.ErrNoRows) {
 		e = NewEntityNotFound()
