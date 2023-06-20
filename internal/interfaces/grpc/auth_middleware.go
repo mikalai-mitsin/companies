@@ -5,8 +5,7 @@ import (
 	"strings"
 
 	"github.com/018bf/companies/internal/configs"
-	"github.com/018bf/companies/internal/domain/interceptors"
-	"github.com/018bf/companies/internal/domain/models"
+	"github.com/018bf/companies/internal/entity"
 	"github.com/018bf/companies/pkg/log"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 	"google.golang.org/grpc"
@@ -14,9 +13,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+//go:generate mockgen -source=auth_middleware.go -package=grpc -destination=auth_middleware_mock.go
+
 type ctxKey int
 
 const TokenKey ctxKey = iota + 1
+
 const (
 	headerAuthorize = "authorization"
 	expectedScheme  = "bearer"
@@ -43,14 +45,18 @@ func AuthFromMD(ctx context.Context) (string, error) {
 	return splits[1], nil
 }
 
+type authInterceptor interface {
+	ValidateToken(ctx context.Context, token *entity.Token) error
+}
+
 type AuthMiddleware struct {
 	logger          log.Logger
 	config          *configs.Config
-	authInterceptor interceptors.AuthInterceptor
+	authInterceptor authInterceptor
 }
 
 func NewAuthMiddleware(
-	authInterceptor interceptors.AuthInterceptor,
+	authInterceptor authInterceptor,
 	logger log.Logger,
 	config *configs.Config,
 ) *AuthMiddleware {
@@ -58,7 +64,7 @@ func NewAuthMiddleware(
 }
 
 func (m *AuthMiddleware) Auth(ctx context.Context) (context.Context, error) {
-	var token *models.Token
+	var token *entity.Token
 	stringToken, err := AuthFromMD(ctx)
 	if err != nil {
 		return context.WithValue(ctx, TokenKey, token), nil
@@ -66,9 +72,9 @@ func (m *AuthMiddleware) Auth(ctx context.Context) (context.Context, error) {
 	if stringToken == "" {
 		return context.WithValue(ctx, TokenKey, token), nil
 	}
-	token = models.NewToken(stringToken)
+	token = entity.NewToken(stringToken)
 	if err := m.authInterceptor.ValidateToken(ctx, token); err != nil {
-		return nil, decodeError(err)
+		return nil, DecodeError(err)
 	}
 	newCtx := context.WithValue(ctx, TokenKey, token)
 	return newCtx, nil

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/018bf/companies/internal/configs"
-	"github.com/018bf/companies/internal/domain/errs"
+	"github.com/018bf/companies/internal/errs"
 	"github.com/018bf/companies/pkg/log"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

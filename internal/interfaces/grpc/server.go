@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/018bf/companies/internal/configs"
-	"github.com/018bf/companies/internal/domain/errs"
+	"github.com/018bf/companies/internal/errs"
 	companiespb "github.com/018bf/companies/pkg/companiespb/v1"
 	"github.com/018bf/companies/pkg/log"
 	grpcZap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
@@ -104,7 +104,7 @@ func DefaultMessageProducer(
 	}
 	logger.Check(level, msg).Write(params...)
 }
-func decodeError(err error) error {
+func DecodeError(err error) error {
 	var domainError *errs.Error
 	if errors.As(err, &domainError) {
 		stat := status.New(codes.Code(domainError.Code), domainError.Message)

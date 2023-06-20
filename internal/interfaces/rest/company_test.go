@@ -11,11 +11,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/018bf/companies/internal/domain/errs"
-	"github.com/018bf/companies/internal/domain/interceptors"
-	mock_interceptors "github.com/018bf/companies/internal/domain/interceptors/mock"
-	"github.com/018bf/companies/internal/domain/models"
-	mock_models "github.com/018bf/companies/internal/domain/models/mock"
+	"github.com/018bf/companies/internal/entity"
+	mock_models "github.com/018bf/companies/internal/entity/mock"
+	"github.com/018bf/companies/internal/errs"
 	"github.com/018bf/companies/pkg/log"
 	mock_log "github.com/018bf/companies/pkg/log/mock"
 	"github.com/gin-gonic/gin"
@@ -26,14 +24,14 @@ func TestCompanyHandler_Create(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	create := mock_models.NewCompanyCreate(t)
 	createjson, _ := json.Marshal(create)
 	company := mock_models.NewCompany(t)
 	companyjson, _ := json.Marshal(company)
 	type fields struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	type args struct {
@@ -50,12 +48,12 @@ func TestCompanyHandler_Create(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Create(gomock.Any(), create, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Create(gomock.Any(), create, utils.Pointer(entity.Token("good token"))).
 					Return(company, nil)
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
@@ -64,7 +62,7 @@ func TestCompanyHandler_Create(t *testing.T) {
 						"Content-Type": []string{"application/json"},
 					},
 					Body: io.NopCloser(bytes.NewBuffer(createjson)),
-				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token")))),
+				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token")))),
 			},
 			wantBody:   bytes.NewBuffer(companyjson),
 			wantStatus: http.StatusCreated,
@@ -72,12 +70,12 @@ func TestCompanyHandler_Create(t *testing.T) {
 		{
 			name: "permission denied",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Create(gomock.Any(), create, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Create(gomock.Any(), create, utils.Pointer(entity.Token("good token"))).
 					Return(nil, errs.NewPermissionDenied())
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
@@ -86,7 +84,7 @@ func TestCompanyHandler_Create(t *testing.T) {
 						"Content-Type": []string{"application/json"},
 					},
 					Body: io.NopCloser(bytes.NewBuffer(createjson)),
-				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token")))),
+				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token")))),
 			},
 			wantBody:   bytes.NewBufferString(errs.NewPermissionDenied().Error()),
 			wantStatus: http.StatusForbidden,
@@ -119,11 +117,11 @@ func TestCompanyHandler_Delete(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	company := mock_models.NewCompany(t)
 	type fields struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	type args struct {
@@ -140,17 +138,17 @@ func TestCompanyHandler_Delete(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Delete(gomock.Any(), company.ID, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Delete(gomock.Any(), company.ID, utils.Pointer(entity.Token("good token"))).
 					Return(nil)
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
 				request: (&http.Request{}).WithContext(
-					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token"))),
+					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token"))),
 				),
 			},
 			wantBody:   &bytes.Buffer{},
@@ -159,17 +157,17 @@ func TestCompanyHandler_Delete(t *testing.T) {
 		{
 			name: "permission denied",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Delete(gomock.Any(), company.ID, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Delete(gomock.Any(), company.ID, utils.Pointer(entity.Token("good token"))).
 					Return(errs.NewPermissionDenied())
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
 				request: (&http.Request{}).WithContext(
-					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token"))),
+					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token"))),
 				),
 			},
 			wantBody:   bytes.NewBufferString(errs.NewPermissionDenied().Error()),
@@ -204,12 +202,12 @@ func TestCompanyHandler_Get(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	company := mock_models.NewCompany(t)
 	companyjson, _ := json.Marshal(company)
 	type fields struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	type args struct {
@@ -226,17 +224,17 @@ func TestCompanyHandler_Get(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Get(gomock.Any(), company.ID, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Get(gomock.Any(), company.ID, utils.Pointer(entity.Token("good token"))).
 					Return(company, nil)
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
 				request: (&http.Request{}).WithContext(
-					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token"))),
+					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token"))),
 				),
 			},
 			wantBody:   bytes.NewBuffer(companyjson),
@@ -245,17 +243,17 @@ func TestCompanyHandler_Get(t *testing.T) {
 		{
 			name: "permission denied",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Get(gomock.Any(), company.ID, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Get(gomock.Any(), company.ID, utils.Pointer(entity.Token("good token"))).
 					Return(nil, errs.NewPermissionDenied())
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
 				request: (&http.Request{}).WithContext(
-					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token"))),
+					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token"))),
 				),
 			},
 			wantBody:   bytes.NewBufferString(errs.NewPermissionDenied().Error()),
@@ -290,13 +288,13 @@ func TestCompanyHandler_List(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
-	filter := &models.CompanyFilter{}
-	listCompanies := []*models.Company{mock_models.NewCompany(t)}
+	filter := &entity.CompanyFilter{}
+	listCompanies := []*entity.Company{mock_models.NewCompany(t)}
 	listCompaniesjson, _ := json.Marshal(listCompanies)
 	type fields struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	type args struct {
@@ -313,17 +311,17 @@ func TestCompanyHandler_List(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					List(gomock.Any(), filter, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					List(gomock.Any(), filter, utils.Pointer(entity.Token("good token"))).
 					Return(listCompanies, uint64(len(listCompanies)), nil)
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
 				request: (&http.Request{}).WithContext(
-					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token"))),
+					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token"))),
 				),
 			},
 			wantBody:   bytes.NewBuffer(listCompaniesjson),
@@ -332,17 +330,17 @@ func TestCompanyHandler_List(t *testing.T) {
 		{
 			name: "permission denied",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					List(gomock.Any(), filter, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					List(gomock.Any(), filter, utils.Pointer(entity.Token("good token"))).
 					Return(nil, uint64(0), errs.NewPermissionDenied())
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
 				request: (&http.Request{}).WithContext(
-					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token"))),
+					context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token"))),
 				),
 			},
 			wantBody:   bytes.NewBufferString(errs.NewPermissionDenied().Error()),
@@ -376,10 +374,10 @@ func TestCompanyHandler_Register(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	type fields struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	type args struct {
@@ -393,7 +391,7 @@ func TestCompanyHandler_Register(t *testing.T) {
 		{
 			name: "ok",
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
@@ -416,14 +414,14 @@ func TestCompanyHandler_Update(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	update := mock_models.NewCompanyUpdate(t)
 	updatejson, _ := json.Marshal(update)
 	company := mock_models.NewCompany(t)
 	companyjson, _ := json.Marshal(company)
 	type fields struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	type args struct {
@@ -441,12 +439,12 @@ func TestCompanyHandler_Update(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Update(gomock.Any(), update, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Update(gomock.Any(), update, utils.Pointer(entity.Token("good token"))).
 					Return(company, nil)
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
@@ -455,7 +453,7 @@ func TestCompanyHandler_Update(t *testing.T) {
 						"Content-Type": []string{"application/json"},
 					},
 					Body: io.NopCloser(bytes.NewBuffer(updatejson)),
-				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token")))),
+				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token")))),
 			},
 			wantBody:   bytes.NewBuffer(companyjson),
 			wantStatus: http.StatusOK,
@@ -463,12 +461,12 @@ func TestCompanyHandler_Update(t *testing.T) {
 		{
 			name: "permission denied",
 			setup: func() {
-				companyInterceptor.EXPECT().
-					Update(gomock.Any(), update, utils.Pointer(models.Token("good token"))).
+				mockCompanyInterceptor.EXPECT().
+					Update(gomock.Any(), update, utils.Pointer(entity.Token("good token"))).
 					Return(nil, errs.NewPermissionDenied())
 			},
 			fields: fields{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			args: args{
@@ -477,7 +475,7 @@ func TestCompanyHandler_Update(t *testing.T) {
 						"Content-Type": []string{"application/json"},
 					},
 					Body: io.NopCloser(bytes.NewBuffer(updatejson)),
-				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(models.Token("good token")))),
+				}).WithContext(context.WithValue(context.Background(), TokenContextKey, utils.Pointer(entity.Token("good token")))),
 			},
 			wantBody:   bytes.NewBufferString(errs.NewPermissionDenied().Error()),
 			wantStatus: http.StatusForbidden,
@@ -510,10 +508,10 @@ func TestCompanyHandler_Update(t *testing.T) {
 func TestNewCompanyHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	companyInterceptor := mock_interceptors.NewMockCompanyInterceptor(ctrl)
+	mockCompanyInterceptor := NewMockcompanyInterceptor(ctrl)
 	logger := mock_log.NewMockLogger(ctrl)
 	type args struct {
-		companyInterceptor interceptors.CompanyInterceptor
+		companyInterceptor companyInterceptor
 		logger             log.Logger
 	}
 	tests := []struct {
@@ -524,11 +522,11 @@ func TestNewCompanyHandler(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 			want: &CompanyHandler{
-				companyInterceptor: companyInterceptor,
+				companyInterceptor: mockCompanyInterceptor,
 				logger:             logger,
 			},
 		},

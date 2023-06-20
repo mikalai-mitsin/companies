@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/018bf/companies/internal/domain/errs"
+	"github.com/018bf/companies/internal/errs"
 )
 
 func TestParseConfig(t *testing.T) {

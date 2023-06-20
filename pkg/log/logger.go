@@ -3,7 +3,7 @@ package log
 import (
 	"context"
 	"errors"
-	"github.com/018bf/companies/internal/domain/errs"
+	"github.com/018bf/companies/internal/errs"
 	"strings"
 	"time"
 

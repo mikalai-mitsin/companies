@@ -9,10 +9,8 @@ import (
 	"testing"
 
 	"github.com/018bf/companies/internal/configs"
-	"github.com/018bf/companies/internal/domain/errs"
-	"github.com/018bf/companies/internal/domain/interceptors"
-	mock_interceptors "github.com/018bf/companies/internal/domain/interceptors/mock"
-	"github.com/018bf/companies/internal/domain/models"
+	"github.com/018bf/companies/internal/entity"
+	"github.com/018bf/companies/internal/errs"
 	"github.com/018bf/companies/pkg/log"
 
 	"github.com/golang/mock/gomock"
@@ -43,10 +41,10 @@ func (t Transport) SetTrailer(_ metadata.MD) error {
 func TestAuthMiddleware_Auth(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	authInterceptor := mock_interceptors.NewMockAuthInterceptor(ctrl)
+	mockAuthInterceptor := NewMockauthInterceptor(ctrl)
 	ctx := context.Background()
-	token := utils.Pointer(models.Token("my_token"))
-	var tokenPointer *models.Token
+	token := utils.Pointer(entity.Token("my_token"))
+	var tokenPointer *entity.Token
 	ctxWithToken := metadata.NewIncomingContext(ctx, metadata.New(map[string]string{
 		"authorization": fmt.Sprintf("Bearer %s", token.String()),
 	}))
@@ -54,7 +52,7 @@ func TestAuthMiddleware_Auth(t *testing.T) {
 		"authorization": fmt.Sprintf("Bearer %s", "very bad token"),
 	}))
 	type fields struct {
-		authInterceptor interceptors.AuthInterceptor
+		authInterceptor authInterceptor
 	}
 	type args struct {
 		ctx context.Context
@@ -70,10 +68,10 @@ func TestAuthMiddleware_Auth(t *testing.T) {
 		{
 			name: "ok",
 			setup: func() {
-				authInterceptor.EXPECT().ValidateToken(ctxWithToken, token).Return(nil)
+				mockAuthInterceptor.EXPECT().ValidateToken(ctxWithToken, token).Return(nil)
 			},
 			fields: fields{
-				authInterceptor: authInterceptor,
+				authInterceptor: mockAuthInterceptor,
 			},
 			args: args{
 				ctx: ctxWithToken,
@@ -84,24 +82,24 @@ func TestAuthMiddleware_Auth(t *testing.T) {
 		{
 			name: "bad token",
 			setup: func() {
-				authInterceptor.EXPECT().
-					ValidateToken(ctxWithBadToken, models.NewToken("very bad token")).
+				mockAuthInterceptor.EXPECT().
+					ValidateToken(ctxWithBadToken, entity.NewToken("very bad token")).
 					Return(errs.NewBadToken())
 			},
 			fields: fields{
-				authInterceptor: authInterceptor,
+				authInterceptor: mockAuthInterceptor,
 			},
 			args: args{
 				ctx: ctxWithBadToken,
 			},
 			want:    nil,
-			wantErr: decodeError(errs.NewBadToken()),
+			wantErr: DecodeError(errs.NewBadToken()),
 		},
 		{
 			name:  "without token",
 			setup: func() {},
 			fields: fields{
-				authInterceptor: authInterceptor,
+				authInterceptor: mockAuthInterceptor,
 			},
 			args: args{
 				ctx: ctx,
@@ -131,9 +129,9 @@ func TestAuthMiddleware_Auth(t *testing.T) {
 func TestNewAuthMiddleware(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	authInterceptor := mock_interceptors.NewMockAuthInterceptor(ctrl)
+	mockAuthInterceptor := NewMockauthInterceptor(ctrl)
 	type args struct {
-		authInterceptor interceptors.AuthInterceptor
+		authInterceptor authInterceptor
 		logger          log.Logger
 		config          *configs.Config
 	}
@@ -145,10 +143,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 		{
 			name: "ok",
 			args: args{
-				authInterceptor: authInterceptor,
+				authInterceptor: mockAuthInterceptor,
 			},
 			want: &AuthMiddleware{
-				authInterceptor: authInterceptor,
+				authInterceptor: mockAuthInterceptor,
 			},
 		},
 	}
